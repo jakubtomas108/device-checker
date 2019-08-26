@@ -1,26 +1,58 @@
-import React from 'react';
-import logo from './logo.svg';
-import './App.css';
+import React, { useState, useLayoutEffect } from "react";
+import { Router, navigate } from "@reach/router";
+import { createGlobalStyle } from "styled-components";
 
-function App() {
-  return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
-  );
-}
+import Header from "./components/shared/Header";
+import Login from "./components/pages/Login";
+import DevicesList from "./components/pages/DevicesList";
+import CreateDevice from "./components/pages/CreateDevice";
+
+const GlobalStyles = createGlobalStyle`
+    body {
+        background: whitesmoke;
+        margin-top: 5rem;
+    }
+`;
+
+const App = () => {
+    const [userData, setUserData] = useState({});
+
+    useLayoutEffect(() => {
+        const user = JSON.parse(sessionStorage.getItem("user"));
+
+        if (user && user.token) {
+            setUserData(user);
+
+            user.type === "admin" && window.location.pathname === "/create-device"
+                ? navigate("/create-device")
+                : navigate("/devices-list");
+        } else {
+            navigate("/");
+        }
+    }, []);
+
+    const handleLogOut = () => {
+        navigate("/");
+        sessionStorage.removeItem("user");
+        setUserData({});
+    };
+
+    return (
+        <div>
+            <GlobalStyles />
+            <Header
+                userData={userData}
+                handleLogOut={handleLogOut}
+                navigateToCreateDevice={() => navigate("/create-device")}
+            />
+
+            <Router>
+                <Login path="/" setUserData={setUserData} />
+                <DevicesList path="devices-list" userData={userData} />
+                <CreateDevice path="create-device" />
+            </Router>
+        </div>
+    );
+};
 
 export default App;
